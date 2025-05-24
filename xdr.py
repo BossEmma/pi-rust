@@ -40,7 +40,7 @@ source_keypair = Keypair.from_secret(kp.secret)
 source_keypair2 = Keypair.from_secret(kp2.secret)
 
 # Connect to Horizon server
-server = Server("http://127.0.0.1:8000/")
+server = Server("https://api.mainnet.minepi.com/")
 source_account = server.load_account(account_id=source_keypair2.public_key)
 base_fee = server.fetch_base_fee()
 current_seq = int(source_account.sequence)

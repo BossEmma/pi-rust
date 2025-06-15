@@ -5,6 +5,8 @@ use std::fs::File;
 use std::io::BufReader;
 use std::error::Error;
 use regex::Regex;
+use std::thread;
+use std::time::Duration;
 
 #[derive(Deserialize, Debug)]
 struct SubmitResponse {
@@ -86,6 +88,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             if !success {
                 println!("❌ All retries failed for {}", key);
             }
+
+            // Add a 0.1 second delay after each transaction
+            thread::sleep(Duration::from_millis(200));
         }
     }
 

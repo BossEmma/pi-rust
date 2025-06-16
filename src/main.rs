@@ -1,4 +1,3 @@
-// NOTE: Add `glob = "0.3"` to your Cargo.toml dependencies.
 use reqwest::blocking::Client;
 use serde::Deserialize;
 use std::error::Error;
@@ -87,7 +86,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         .build()
                         .expect("Failed to build client");
                     submit_xdr(&filename, &tx_name, &xdr, &client);
-                    thread::sleep(Duration::from_secs(0));
+                    thread::sleep(Duration::from_secs(0.5));
                 });
                 handles.push(handle);
             }

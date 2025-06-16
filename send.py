@@ -3,6 +3,7 @@ from mnemonic import Mnemonic
 from keyfunc import account_keypair
 
 my_seed_phrase = input("Enter your seed phrase: ")
+amount = input("Enter the amount to send: ")
 
 def load_passphrases(filename):
     with open(filename, 'r') as file:
@@ -27,7 +28,6 @@ for binary_seed in destination_binary_seeds:
 source_keypair = Keypair.from_secret(kp.secret)
 print(kp.secret) 
 
-amount= "1"
 server= Server("https://api.mainnet.minepi.com/") 
 
 source_account = server.load_account(source_keypair.public_key) 

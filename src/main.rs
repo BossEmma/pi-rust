@@ -1,97 +1,104 @@
+// NOTE: Add `glob = "0.3"` to your Cargo.toml dependencies.
 use reqwest::blocking::Client;
 use serde::Deserialize;
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::BufReader;
 use std::error::Error;
-use regex::Regex;
+use std::fs;
 use std::thread;
 use std::time::Duration;
+use std::collections::BTreeMap;
+use glob::glob;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct SubmitResponse {
     hash: Option<String>,
-    result_xdr: Option<String>,
     extras: Option<Extras>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct Extras {
     result_codes: Option<ResultCodes>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct ResultCodes {
     transaction: Option<String>,
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let file = File::open("xdrs.json")?;
-    let reader = BufReader::new(file);
-
-    let tx_map: HashMap<String, String> = serde_json::from_reader(reader)?;
-
-    let re = Regex::new(r"transaction(\d+)")?;
-    let mut ordered_keys: Vec<_> = tx_map.keys().collect();
-    ordered_keys.sort_by_key(|k| {
-        re.captures(k)
-            .and_then(|cap| cap.get(1))
-            .and_then(|m| m.as_str().parse::<u32>().ok())
-            .unwrap_or(0)
-    });
-
-    let client = Client::new();
-    let horizon_url = "https://api.mainnet.minepi.com/transactions";
-
-    for key in ordered_keys {
-        if let Some(xdr) = tx_map.get(key) {
-            println!("📤 Submitting {}...", key);
-
-            let mut attempts = 0;
-            let max_retries = 3;
-            let mut success = false;
-
-            while attempts < max_retries {
-                let res = client
-                    .post(horizon_url)
-                    .form(&[("tx", xdr)])
-                    .send();
-
-                match res {
-                    Ok(response) => {
-                        if response.status().is_success() {
-                            let parsed: SubmitResponse = response.json()?;
-                            println!("✅ Submitted: {}", key);
-                            println!("    Hash: {:?}", parsed.hash);
-                            success = true;
-                            break;
-                        } else {
-                            let parsed: SubmitResponse = response.json()?;
-                            println!("❌ Failed to submit: {}", key);
-                            if let Some(extras) = parsed.extras {
-                                if let Some(codes) = extras.result_codes {
-                                    println!("    Error Code: {:?}", codes.transaction);
-                                }
-                            } else {
-                                println!("    Full response: {:?}", parsed);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        println!("⚠️ Request error: {}. Retrying...", e);
-                    }
+fn submit_xdr(filename: &str, tx_name: &str, xdr: &str, client: &Client) {
+    println!("{}: Submitting {}...", filename, tx_name);
+    match client
+        .post("http://173.230.130.166:8000/transactions")
+        .form(&[("tx", xdr)])
+        .send()
+    {
+        Ok(response) if response.status().is_success() => {
+            if let Ok(parsed) = response.json::<SubmitResponse>() {
+                println!("✅ Submitted! {}: {}", filename, tx_name);
+                if let Some(hash) = parsed.hash {
+                    println!("    Hash: {}", hash);
                 }
-
-                attempts += 1;
+            } else {
+                println!("✅ Submitted! {}: {}", filename, tx_name);
             }
-
-            if !success {
-                println!("❌ All retries failed for {}", key);
+        }
+        Ok(response) => {
+            println!("❌ Failed (HTTP {}). {}: {}", response.status().as_u16(), filename, tx_name);
+            if let Ok(parsed) = response.json::<SubmitResponse>() {
+                if let Some(tx_code) = parsed.extras
+                    .and_then(|e| e.result_codes)
+                    .and_then(|r| r.transaction) {
+                    println!("    Error: {}", tx_code);
+                }
             }
-            
-            thread::sleep(Duration::from_millis(200));
+        }
+        Err(e) => println!("⚠️ Error: {}. {}: {}", e, filename, tx_name),
+    }
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    // Find all xdrs*.json files in current directory
+    let pattern = "xdrs*.json";
+    let mut file_maps = Vec::new();
+    let mut filenames = Vec::new();
+
+    for entry in glob(pattern)? {
+        let path = entry?;
+        let filename = path.file_name().unwrap().to_string_lossy().to_string();
+        let file_content = fs::read_to_string(&path)?;
+        let xdr_map: BTreeMap<String, String> = serde_json::from_str(&file_content)?;
+        file_maps.push(xdr_map);
+        filenames.push(filename);
+    }
+
+    // Assume all files have the same transaction keys (transaction1..transaction100)
+    for tx_idx in 1..=100 {
+        let tx_name = format!("transaction{}", tx_idx);
+        let mut handles = vec![];
+
+        for (file_idx, xdr_map) in file_maps.iter().enumerate() {
+            if let Some(xdr) = xdr_map.get(&tx_name) {
+                let filename = filenames[file_idx].clone();
+                let xdr = xdr.clone();
+                let tx_name = tx_name.clone();
+                let handle = thread::spawn(move || {
+                    let client = Client::builder()
+                        .timeout(Duration::from_secs(10))
+                        .tcp_nodelay(true)
+                        .build()
+                        .expect("Failed to build client");
+                    submit_xdr(&filename, &tx_name, &xdr, &client);
+                    thread::sleep(Duration::from_secs(0));
+                });
+                handles.push(handle);
+            }
+        }
+
+        // Wait for all threads for this transaction index to finish before moving to the next
+        for handle in handles {
+            handle.join().expect("Thread panicked");
         }
     }
 
+    println!("All XDRs submitted.");
     Ok(())
 }

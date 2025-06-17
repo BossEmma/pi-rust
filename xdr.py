@@ -154,10 +154,6 @@ source_keypair = Keypair.from_secret(kp.secret)
 with open("phrases.txt", "r") as f:
     phrases = [line.strip() for line in f if line.strip()]
 
-# Connect to Horizon server
-server = Server("https://api.mainnet.minepi.com/")
-base_fee = 9000000
-
 for idx, my_seed_phrase2 in enumerate(phrases):
     print(f"\n🔑 Using phrase {idx+1}: {my_seed_phrase2[:10]}...")
 
@@ -175,7 +171,7 @@ for idx, my_seed_phrase2 in enumerate(phrases):
         tx_builder = TransactionBuilder(
             source_account=source_account,
             network_passphrase="Pi Network",
-            base_fee=base_fee
+            base_fee=9000000
         )
         tx_builder.append_claim_claimable_balance_op(balance_id=balance_id, source=source_keypair.public_key)
         tx_builder.append_payment_op(destination=des_address, asset=Asset.native(), amount=amount, source=source_keypair.public_key)

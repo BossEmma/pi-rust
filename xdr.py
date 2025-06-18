@@ -81,7 +81,7 @@ def load_passphrases(filename):
 
 destination_phrases = load_passphrases('phrases.txt')
 
-server= Server("https://api.mainnet.minepi.com/") 
+server= Server("http://173.230.130.166:8000/") 
 my_language = 'english' 
 mnemo = Mnemonic(my_language)
 if mnemo.check(my_seed_phrase_fee):

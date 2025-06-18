@@ -9,7 +9,7 @@ def load_passphrases(filename):
 DESTINATION_PHRASES_FILE = "phrases.txt"
 SOURCE_PASSPHRASE = input("Enter your seed phrase (Source Wallet): ")
 
-server = Server("https://api.mainnet.minepi.com/")
+server = Server("http://173.230.130.166:8000/")
 my_language = 'english'
 mnemo = Mnemonic(my_language)
 

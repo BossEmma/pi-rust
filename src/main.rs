@@ -81,12 +81,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                 let tx_name = tx_name.clone();
                 let handle = thread::spawn(move || {
                     let client = Client::builder()
-                        .timeout(Duration::from_secs(10))
+                        .timeout(Duration::from_secs(15))
                         .tcp_nodelay(true)
                         .build()
                         .expect("Failed to build client");
                     submit_xdr(&filename, &tx_name, &xdr, &client);
-                    thread::sleep(Duration::from_millis(500)); 
+                   //thread::sleep(Duration::from_millis(500)); 
                 });
                 handles.push(handle);
             }

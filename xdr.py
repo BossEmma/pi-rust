@@ -134,10 +134,14 @@ transaction_builder = (
 for dest_keypair, amt in zip(adjusted_keypairs, adjusted_amounts):
     transaction_builder = transaction_builder.append_payment_op(dest_keypair.public_key, Asset.native(), amt)
 
-transaction = transaction_builder.set_timeout(2000).build()
-transaction.sign(source_keypair_fee)
-response = server.submit_transaction(transaction)
-print(response)
+# Check if any operations were added
+if not adjusted_keypairs:
+    print("No destination accounts require a top-up. No transaction will be submitted.")
+else:
+    transaction = transaction_builder.set_timeout(2000).build()
+    transaction.sign(source_keypair_fee)
+    response = server.submit_transaction(transaction)
+    print(response)
 
 
 mnemo = Mnemonic('english')

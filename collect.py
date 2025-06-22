@@ -53,25 +53,22 @@ for idx, dest_keypair in enumerate(destination_keypairs):
         print(f"Destination {idx+1} ({dest_keypair.public_key}) not found or error: {e}")
 
 if payment_ops:
-    transaction_builder = TransactionBuilder(
-        source_account=server.load_account(source_keypair.public_key),
-        network_passphrase="Pi Network",
-        base_fee=server.fetch_base_fee(),
-    )
-    for op in payment_ops:
+    for op, signer in zip(payment_ops, signers):
+        transaction_builder = TransactionBuilder(
+            source_account=server.load_account(source_keypair.public_key),
+            network_passphrase="Pi Network",
+            base_fee=server.fetch_base_fee(),
+        )
         transaction_builder = transaction_builder.append_payment_op(
             destination=source_keypair.public_key,
             asset=Asset.native(),
             amount=op["amount"],
             source=op["source"]
         )
-    transaction = transaction_builder.set_timeout(2000).build()
-    for signer in signers:
+        transaction = transaction_builder.set_timeout(2000).build()
         transaction.sign(signer)
-
-    transaction.sign(source_keypair)
-    response = server.submit_transaction(transaction)
-    print(response)
-
+        transaction.sign(source_keypair)
+        response = server.submit_transaction(transaction)
+        print(f"Response for {signer.public_key}: {response}")
 else:
     print("No payments to collect.")

@@ -38,7 +38,7 @@ for idx, dest_keypair in enumerate(destination_keypairs):
         for b in account['balances']:
             if b.get('asset_type') == 'native':
                 bal = float(b.get('balance'))
-                amount_to_send = bal - 0.99
+                amount_to_send = bal - 1.00
                 if amount_to_send > 0:
                     send_amt_str = f"{amount_to_send:.7f}".rstrip('0').rstrip('.') if '.' in f"{amount_to_send:.7f}" else f"{amount_to_send:.7f}"
                     print(f"Destination {idx+1} ({dest_keypair.public_key}) balance: {bal} | sending back: {send_amt_str}")

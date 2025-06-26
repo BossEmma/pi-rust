@@ -125,7 +125,7 @@ for idx, dest_keypair in enumerate(destination_keypairs):
         print(f"Destination {idx+1} ({dest_keypair.public_key}) not found or error: {e}")
 
 # Process in batches of 100
-BATCH_SIZE = 1
+BATCH_SIZE = 100
 for batch_start in range(0, len(adjusted_keypairs), BATCH_SIZE):
     batch_keypairs = adjusted_keypairs[batch_start:batch_start+BATCH_SIZE]
     batch_amounts = adjusted_amounts[batch_start:batch_start+BATCH_SIZE]

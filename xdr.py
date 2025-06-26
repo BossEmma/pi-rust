@@ -110,8 +110,8 @@ for idx, dest_keypair in enumerate(destination_keypairs):
             if b.get('asset_type') == 'native':
                 bal = float(b.get('balance'))
                 bal_minus = bal - 1.00
-                if bal_minus < 3:
-                    send_amt = 3 - bal_minus
+                if bal_minus < 0.1:
+                    send_amt = 0.1 - bal_minus
                     # Format to max 7 decimal places as required by Stellar
                     send_amt_str = f"{send_amt:.7f}".rstrip('0').rstrip('.') if '.' in f"{send_amt:.7f}" else f"{send_amt:.7f}"
                     print(f"Destination {idx+1} ({dest_keypair.public_key}) balance: {bal_minus} | sending: {send_amt_str}")

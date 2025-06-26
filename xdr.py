@@ -93,6 +93,8 @@ except:
     print("No Internet Connection")
 
 kp_fee = account_keypair(binary_seed_fee, 0)
+
+# Split destination_keypairs into batches of 100
 destination_keypairs = []
 for binary_seed_dest in destination_binary_seeds:
     dest_kp = account_keypair(binary_seed_dest, 0)
@@ -122,26 +124,29 @@ for idx, dest_keypair in enumerate(destination_keypairs):
     except Exception as e:
         print(f"Destination {idx+1} ({dest_keypair.public_key}) not found or error: {e}")
 
-
-transaction_builder = (
-    TransactionBuilder(
-        source_account=server.load_account(source_keypair_fee.public_key) ,
-        network_passphrase="Pi Network",
-        base_fee=server.fetch_base_fee() ,
+# Process in batches of 100
+BATCH_SIZE = 1
+for batch_start in range(0, len(adjusted_keypairs), BATCH_SIZE):
+    batch_keypairs = adjusted_keypairs[batch_start:batch_start+BATCH_SIZE]
+    batch_amounts = adjusted_amounts[batch_start:batch_start+BATCH_SIZE]
+    transaction_builder = (
+        TransactionBuilder(
+            source_account=server.load_account(source_keypair_fee.public_key) ,
+            network_passphrase="Pi Network",
+            base_fee=server.fetch_base_fee(),
+        )
     )
-)
+    for dest_keypair, amt in zip(batch_keypairs, batch_amounts):
+        transaction_builder = transaction_builder.append_payment_op(dest_keypair.public_key, Asset.native(), amt)
 
-for dest_keypair, amt in zip(adjusted_keypairs, adjusted_amounts):
-    transaction_builder = transaction_builder.append_payment_op(dest_keypair.public_key, Asset.native(), amt)
-
-# Check if any operations were added
-if not adjusted_keypairs:
-    print("No destination accounts require a top-up. No transaction will be submitted.")
-else:
-    transaction = transaction_builder.set_timeout(2000).build()
-    transaction.sign(source_keypair_fee)
-    response = server.submit_transaction(transaction)
-    print(response)
+    # Check if any operations were added
+    if not batch_keypairs:
+        print("No destination accounts require a top-up in this batch. No transaction will be submitted.")
+    else:
+        transaction = transaction_builder.set_timeout(2000).build()
+        transaction.sign(source_keypair_fee)
+        response = server.submit_transaction(transaction)
+        print(response)
 
 
 mnemo = Mnemonic('english')
